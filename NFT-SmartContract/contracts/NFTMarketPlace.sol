@@ -31,7 +31,7 @@ contract NFTMarketPlace is ERC721URIStorage{
     bool sold;
   }
 
-  // Event: Stores the information of created NFT
+  // Event: Stores the information of created NFT and whenever a transfer occurs this event should be called to set the state of the NFT
   event idMarketItemCreated(
     uint256 indexed tokenId,
     address seller,
@@ -67,7 +67,7 @@ contract NFTMarketPlace is ERC721URIStorage{
   //2. NFT creation by the sellers
 
 
-  // Function: Create NFT(non-fungible TOKEN)
+  // Function: Create NFT(non-fungible TOKEN) token id
   function createToken(string memory tokenURI,uint256 price ) public payable returns(uint256){
     _tokenIds.increment();
 
@@ -81,4 +81,45 @@ contract NFTMarketPlace is ERC721URIStorage{
     return newTokenId;
   }
 
+  // Function: Create Market item (in the form of NFT)
+  function createMarketItem(uint256 tokenId,uint price) private{
+    // testing
+    require(price>0, "Price must be atleast 1");
+    require(msg.value==listingPrice, "Price must be equal to listing price");
+
+    //creating market item
+    idMarketItem[tokenId]=MarketItem(
+      tokenId,
+      payable(msg.sender),
+      payable(address(this)),
+      price,
+      false
+    );
+
+    // perform transfer
+    _transfer(msg.sender,address(this),tokenId);
+
+    // calling the event to tell the contract that transaction occured with what value and save that data
+    emit idMarketItemCreated(tokenId, msg.sender, address(this), price, false);
+  }
+
+  // Function: Resale NFT
+  function resaleToken(uint256 tokenId, uint256 price) public payable{
+    // testing
+    require(idMarketItem[tokenId].owner==msg.sender, "Only item owner can perform this operation");
+    require(msg.value==listingPrice,"Price must be equal to listing price");
+
+    // change values of the market item
+    idMarketItem[tokenId].sold=false;
+    idMarketItem[tokenId].price=price;
+    idMarketItem[tokenId].seller=payable(msg.sender);
+    idMarketItem[tokenId].owner=payable(address(this));
+
+    // decrement total NFTs count
+    _itemsSold.decrement();
+
+    // perform transfer
+    _transfer(msg.sender,address(this),tokenId);
+
+  }
 }
