@@ -10,6 +10,9 @@ import "hardhat/console.sol";
 
 // Contract-1 : NFT Selling and Buying
 contract NFTMarketPlace is ERC721URIStorage{
+  //1. Initials states and functions for the MARKETPLACE 
+
+
   // Making counters for the NFT
   using Counters for Counters.Counter;
 
@@ -61,10 +64,21 @@ contract NFTMarketPlace is ERC721URIStorage{
 
 
 
+  //2. NFT creation by the sellers
 
 
+  // Function: Create NFT(non-fungible TOKEN)
+  function createToken(string memory tokenURI,uint256 price ) public payable returns(uint256){
+    _tokenIds.increment();
 
-  // Function: Create NFT Token Function
+    uint256 newTokenId=_tokenIds.current();
+    
+    _mint(msg.sender,newTokenId);
+    _setTokenURI(newTokenId,tokenURI);
 
+    createMarketItem(newTokenId,price);
+
+    return newTokenId;
+  }
 
 }
